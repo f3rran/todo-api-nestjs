@@ -1,26 +1,39 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Task } from './entities/task.entity';
 
 @Injectable()
 export class TaskService {
-  create(createTaskDto: CreateTaskDto) {
-    return 'This action adds a new task';
+  private tasks: Task[] = [];
+  private idCounter = 1;
+
+  findAll(): Task[] {
+    return this.tasks;
   }
 
-  findAll() {
-    return `This action returns all task`;
+  findOne(id: number): Task {
+    const task = this.tasks.find((task) => task.id === id);
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
+    return task;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} task`;
+  create(task: Omit<Task, 'id'>): Task {
+    const newTask = { id: this.idCounter++, ...task };
+    this.tasks.push(newTask);
+    return newTask;
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
+  update(id: number, updatedTask: Partial<Task>): Task {
+    const task = this.findOne(id);
+    const index = this.tasks.indexOf(task);
+    this.tasks[index] = { ...task, ...updatedTask };
+    return this.tasks[index];
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
+  remove(id: number): void {
+    const task = this.findOne(id);
+    console.log(task);
+    this.tasks = this.tasks.filter((task) => task.id !== id);
   }
 }
